@@ -1,0 +1,189 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import sympy as sp
+import numpy as np
+
+
+
+----
+
+
+def demand_curve(c,Q,y,pb):
+    #Programmer ligning 14 her. Bruk c.log() for å regne ut logaritmen.
+    demand = (c.log(Q) - (-4.507 + 0.841*y + 0.2775*pb)) / (-0.397)
+    return demand
+    
+    
+
+----
+
+
+
+def supply_curve_long_run(c,Q,N,X,pf,t):
+    #Programmer ligning 15 her. Bruk c.log() for å regne ut logaritmen.
+    supply = ((1-0.631)*c.log(N*Q+X) - (2.03 - 0.146*pf + 0.0184*t)) / 0.221
+    return supply
+
+
+----
+
+
+def supply_curve_short_run(c,Q,N,X,pf,t,Q_fitted):
+    #Programmer ligning 16 her. Bruk c.log() for å regne ut logaritmen.
+    #TIPS: qprod i ligningen er (N*Q_fitted+X) her. 
+    supply = (c.log(N*Q+X) - (2.03-0.146*pf+0.0184*t+0.631*c.log(N*Q_fitted+X))) / 0.221
+    return supply
+
+
+
+----
+
+
+def equate_q(y,pb,N,X,pf,t):
+    #Finn verdien for Q som gør at demand_curve og supply_curve_long_run returnerer samme verdi. 
+    #Bruk sp.Eq, og la første argument i funksjonene over være sp
+    Q = sp.Symbol('Q')
+    eq = sp.Eq(demand_curve(sp,Q,y,pb), supply_curve_long_run(sp,Q,N,X,pf,t))
+    sol = sp.nsolve(eq, 40)
+    return float(sol)
+
+
+
+----
+
+
+def plot_year(df,year):
+    
+
+
+    #obtaining the relevant variables for year:
+    d=df[df['YEAR']==year].to_dict(orient='records')[0]
+    
+    cpi=d['CPI']
+    y=np.log(d['Y'])
+    pb=np.log(d['PBEEF']/cpi)
+    N=d['POP']
+    X=d['QPRODA']/1439-d['Q']*d['POP']
+    pf=np.log(d['PF']/cpi)
+    t=d['TIME']
+    
+    
+    #obtaining equilibrium quantity:
+    Q_fitted=equate_q(y,pb,N,X,pf,t)
+
+ #plotting the functions:
+    
+    #plot alle tre funksjonene her. 
+    #Husk at 
+    #1. funksjonene skal opphøyes i eksponenten (dvs. du bruker np.exp(<funksjon>)) for å uttrykkes i nivå
+    #2. så skal de multipliseres med cpi
+    #3. første argument er np her, ikke sp. 
+    Q=np.linspace(0.1,100,100)
+    plt.plot(Q, np.exp(demand_curve(np,Q,y,pb))*cpi, label = "Demand")
+    plt.plot(Q, np.exp(supply_curve_long_run(np,Q,N,X,pf,t))*cpi, label = "Supply long run")
+    plt.plot(Q, np.exp(supply_curve_short_run(np,Q,N,X,pf,t,Q_fitted))*cpi, label = "Supply short run")
+    plt.legend(loc = 0)
+    plt.ylim(0,600)
+
+    
+    plt.show()
+    
+ 
+ 
+----
+ 
+ 
+ df=pd.read_csv("https://uit-sok-1006-v22.github.io/innleveringer/chickendata.csv",delimiter=
+";")
+plot_year(df,1995)
+
+
+
+----
+
+
+
+plot_year(df,1960)
+
+#Fra 1950 til 1995 opplevde befolkningen i USA en spiss økning i inntekt. 
+#På samme tid ble verdien av produksjonsprisene redusert, 
+#og også produktiviteten i kyllingproduksjonen økte. 
+#Alle disse faktorene bidro til å stadig endre hver tilbuds- og etterspørselsfunksjon. 
+#økningen i inntekter førte til økt etterspørsel, 
+#mens økning i produksjonskostnader og økt produktivitet førte til økt tilbud. 
+#Disse endringene førte til en lavere likevektspris, men den neste likevekts mengden og tilbudet ble ekstra elastisk.
+
+
+
+----
+
+
+
+def plot_year1(df,year):
+    
+
+
+    #obtaining the relevant variables for year:
+    d=df[df['YEAR']==year].to_dict(orient='records')[0]
+    
+    cpi=d['CPI']
+    y=np.log(d['Y'])
+    pb=np.log(d['PBEEF']/cpi)
+    N=d['POP']
+    X=d['QPRODA']/1439-d['Q']*d['POP']
+    pf=np.log(d['PF']/cpi)
+    t=d['TIME']
+    
+    
+    #obtaining equilibrium quantity:
+    Q_fitted=equate_q(y,pb,N,X,pf,t)
+
+ #plotting the functions:
+    
+    #plot alle tre funksjonene her. 
+    #Husk at 
+    #1. funksjonene skal opphøyes i eksponenten (dvs. du bruker np.exp(<funksjon>)) for å uttrykkes i nivå
+    #2. så skal de multipliseres med cpi
+    #3. første argument er np her, ikke sp. 
+    Q=np.linspace(0.1,100,100)
+    plt.plot(Q, np.exp(demand_curve(np,Q,y,pb))*cpi, label = "Demand")
+    plt.plot(Q, np.exp(demand_curve(np,Q+0.5,y,pb))*cpi, label = "Kvantum + 0,5")
+    plt.plot(Q, np.exp(demand_curve(np,Q,y+0.5,pb))*cpi, label = "Inntekt + 0,5")
+    plt.plot(Q, np.exp(demand_curve(np,Q,y,pb+0.5))*cpi, label = "Storfe + 0,5")
+    plt.plot(Q, np.exp(supply_curve_long_run(np,Q,N,X,pf,t))*cpi, label = "supply_curve_long_run")
+    plt.plot(Q, np.exp(supply_curve_short_run(np,Q,N,X,pf,t,Q_fitted))*cpi, label = "supply_curve_short_run")
+    plt.legend(loc = 1)
+    plt.ylim(0,600)
+    plt.xlim(0,100)
+
+    
+    
+    
+    plt.show()
+
+
+
+
+----
+
+
+plot_year1(df,1995)
+
+
+
+----
+
+
+
+#Når du får en endring på 0,5 i kvantitet (Q), er det ingen endring i etterspørselsfunksjonen. 
+#en ekstra kylling ville bygge en liten forskjell i forbruk.
+#Det økonomiske gevinstnivået er det som har best effekt på det totale forbruket. 
+#Lønnsoppgjøret er en situasjon for at inntektsnivået øker. 
+#innenfor figuren har vi en tendens til å se at en inntektsøkning gir økt etterspørsel,
+#verdien på kort sikt er over prisen på lang sikt.
+#beløpet på lang sikt er høyere enn kvantumet på kort sikt. 
+#En endring på 0,5 innenfor storfe koeffisienten resulterer i en positiv endring i likevekts verdien. 
+#på kort sikt er likevektsprisen over på lang sikt, 
+#men likevekts mengden er større på lang sikt enn på kort sikt. 
+#En situasjon hvor man vil ekspertise på en økning i prisen på storfekjøtt er at hvis det er en økning i produksjonsfaktorer for storfe. 
+#assosiert eksempel er multipliserte kraftfôrpriser.
